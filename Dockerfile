@@ -1,27 +1,27 @@
-FROM node:argon
+FROM node:alpine
 
-ARG hubot_owner
-ARG hubot_description
-ARG hubot_name
+ARG hubot_owner=ohze
+ARG hubot_name=ohze-bot
+ARG hubot_description="ohze bot"
 
-RUN useradd -m -s /bin/bash hubot-matteruser
+RUN npm install -g yo generator-hubot && \
+  adduser -h /hubot -s /bin/sh -S hubot
 
-RUN mkdir -p /usr/src/hubot-matteruser
-RUN chown hubot-matteruser:hubot-matteruser /usr/src/hubot-matteruser
-RUN chown hubot-matteruser:hubot-matteruser /usr/local/lib/node_modules/
-RUN chown hubot-matteruser:hubot-matteruser /usr/local/bin/
+USER  hubot
+WORKDIR /hubot
 
-WORKDIR /usr/src/hubot-matteruser
-USER hubot-matteruser
-RUN npm install -g yo
-RUN npm install -g generator-hubot
+RUN echo "n" | yo hubot --adapter matteruser \
+    --owner="${hubot_owner}" \
+    --name="${hubot_name}" \
+    --description="${hubot_desciption}" \
+    --defaults && \
+  rm hubot-scripts.json && \
+  npm install hubot-matteruser \
+    hubot-jira-bot \
+    hubot-jira-links
 
-RUN echo "No" | yo hubot --adapter matteruser --owner="${hubot_owner}" --name="${hubot_name}" --description="${hubot_desciption}" --defaults \
-&& sed -i '/heroku/d' external-scripts.json
+COPY external-scripts.json external-scripts.json
 
-RUN rm hubot-scripts.json
-
-CMD ["-a", "matteruser"]
-ENTRYPOINT ["./bin/hubot"]
+CMD ["./bin/hubot", "-a", "matteruser"]
 
 EXPOSE 8080
